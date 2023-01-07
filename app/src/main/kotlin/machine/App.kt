@@ -3,13 +3,13 @@
  */
 package machine
 
-
 fun main() {
-    val machine = Machine(Ingredients(1000,1000,100))
-    val customerInterface = CustomerInterface(machine)
-
-    //ask now:
-    customerInterface.askNumberOfCoffeeCups()
-
+    //Initialize the machine:
+    CustomerInterface().run{
+        //initialize the machine
+        initializeMachine()
+        //check the requirements
+        checkCupsRequirements()
+    }
 
 }
