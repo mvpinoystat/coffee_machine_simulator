@@ -3,28 +3,32 @@
  */
 package machine
 
-import kotlin.system.exitProcess
-
 fun main() {
     //initial machine
     val machine = Machine(Ingredients(water = 400, milk = 540, coffee_beans = 120),
         earnings = 550, cups = 9)
     val services = Services(machine)
-    Menu(services).run{
-        execute()
-    }
+    Menu(services).execute()
+
 }
 
-class Menu(val services: Services){
+class Menu(private val services: Services){
     fun execute(){
-        println("\nWrite action (buy, fill, take):")
-        when(inputAction()){
-            ACTION.BUY -> services.buyCoffee()
-            ACTION.TAKE -> services.take()
-            ACTION.FILL -> services.fillIngredients()
-            ACTION.LOOP -> exitProcess(0)
-       }
+        var status = true
+        while(status){
+            println("\nWrite action (buy, fill, take, remaining, exit):")
+            when(readln()){
+                "buy"  -> services.buyCoffee()
+                "fill" -> services.fillIngredients()
+                "take" -> services.takeEarnings()
+                "remaining" -> services.checkRemaining()
+                "exit"-> status = false
+                else -> println("Unknown input. Please try again.")
+            }
 
        }
+
+    }
+
 
 }

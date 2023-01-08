@@ -1,13 +1,9 @@
 package machine
 
-import kotlin.system.exitProcess
-
 enum class CoffeeType {
    ESPRESSO, LATTE, CAPPUCCINO
 }
-enum class ACTION {
-    BUY, FILL, TAKE, LOOP
-}
+
 data class Ingredients(
     var water: Int,
     var milk : Int,
@@ -38,11 +34,16 @@ class Machine(private val inventory: Ingredients,
 
     }
     //a menu action
-    fun buyCoffee(coffeeType: CoffeeType){
+    fun buyCoffee(coffeeType: CoffeeType):Int{
         /** Check the capacity and buy */
         val hasCapacity = checkCapacity(coffeeType)
         val hasCups = cups > 0
-        if(hasCapacity && hasCups) executeBuyTransaction(coffeeType)
+        if(!hasCups) println("Sorry not enough cups!")
+        return if(hasCapacity && hasCups) {
+            println("I have enough resources, making you a coffee!")
+            executeBuyTransaction(coffeeType)
+            0
+        } else -1
 
     }
     //check if it is possible to give coffee
@@ -53,15 +54,18 @@ class Machine(private val inventory: Ingredients,
             CoffeeType.CAPPUCCINO -> compareInventory(cappuccino.ingredients)
         }
     }
-    //compare inventory
+    //Compare the existing inventory with the requirements
     private fun compareInventory(requirements:Ingredients):Boolean{
         val comparison = mutableListOf(0,0,0)
-        if(inventory.water > requirements.water ) comparison[0] = 1
+        if(inventory.water > requirements.water ) {
+            comparison[0] = 1
+        } else println("Sorry not enough water!")
         if(inventory.milk > requirements.milk) comparison[1] = 1
+        else println("Sorry not enough milk!")
         if(inventory.coffee_beans > requirements.coffee_beans) comparison[2] = 1
-       // println("total sum = ${comparison}")
-        return comparison.sum() == 3
+        else println("Sorry not enough coffee beans!")
 
+        return comparison.sum() == 3
     }
 
     //subtract inventory
@@ -69,7 +73,6 @@ class Machine(private val inventory: Ingredients,
         inventory.water -= requirements.water
         inventory.milk -= requirements.milk
         inventory.coffee_beans -= requirements.coffee_beans
-
     }
     //execute buy coffee if there is enough ingredients
     private fun executeBuyTransaction(coffeeType: CoffeeType){
@@ -105,64 +108,94 @@ class Machine(private val inventory: Ingredients,
 
 }
 //helper functions:
-fun checkInputCoffeeType():Int{
-    /**helper function to get integer from command line */
-
+fun checkIntegerInput():Int { /**helper function to get integer from command line */
     return try{
-        readln().toInt()
+        val input = readln().toInt()
+        if(input < 0) -1 else input
     }
     catch (e:Exception){
-        println("Please input only numbers.")
-        exitProcess(0)
+        -1
     }
 }
 
-fun inputAction():ACTION{
-    /**helper function to get action from command line */
-    return when(readln()){
-        "buy" -> ACTION.BUY
-        "fill" -> ACTION.FILL
-        "take" -> ACTION.TAKE
-        else -> ACTION.LOOP
-        }
-}
 
-class Services(val machine: Machine){
-    init{
-        machine.giveStatusReport()
-    }
+
+class Services(private val machine: Machine){
 
     fun fillIngredients(){
         /** this will initialize the machine given the input from customer */
-        println("Write how many ml of water the coffee machine has:")
-        val waterToAdd= checkInputCoffeeType()
-        println("Write how many ml of milk the coffee machine has:")
-        val milkToAdd = checkInputCoffeeType()
-        println("Write how many grams of coffee beans the coffee machine has:")
-        val coffeeBeansToAdd = checkInputCoffeeType()
-        println("Write how many disposable cups you want to add: ")
-        val cupsToAdd = checkInputCoffeeType()
-        machine.refill(Ingredients(waterToAdd,milkToAdd,coffeeBeansToAdd), cupsToAdd)
-        //show status
-        machine.giveStatusReport()
-    }
-
-    fun buyCoffee(){
-        /**Buy coffee and update the machine */
-        println("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino:")
-        when(checkInputCoffeeType()){
-            1 -> machine.buyCoffee(CoffeeType.ESPRESSO)
-            2 -> machine.buyCoffee(CoffeeType.LATTE)
-            3 -> machine.buyCoffee(CoffeeType.CAPPUCCINO)
+        var out = -1
+        while(out < 0 ){
+            println("Write how many ml of water you want to add:")
+            out = checkIntegerInput()
+            if(out == -1)println("Invalid input. Please try again or enter 0")
         }
+        val waterToAdd= out
+        out = -1
+        while(out < 0){
+            println("Write how many ml of milk you want to add:")
+            out = checkIntegerInput()
+            if(out == -1)println("Invalid input. Please try again or enter 0.")
+        }
+        val milkToAdd = out
+        out = -1
+        while(out < 0){
+            println("Write how many grams of coffee beans you want to add:")
+            out = checkIntegerInput()
+            if(out == -1)println("Invalid input. Please try again or enter 0.")
+        }
+        val coffeeBeansToAdd = out
+        out = -1
+        while(out < 0){
+            println("Write how many disposable cups you want to add: ")
+            out = checkIntegerInput()
+            if(out == -1)println("Invalid input. Please try again or enter 0.")
+        }
+        val cupsToAdd = out
 
+        machine.refill(Ingredients(waterToAdd,milkToAdd,coffeeBeansToAdd), cupsToAdd)
+    }
+
+    fun buyCoffee(): Int{
+        /**Buy coffee and update the machine */
+        var rightSelection = false
+        var status:Int = -1
+        while(!rightSelection) {
+            println("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:")
+            status = when (readln()) {
+                "1" -> {
+                    rightSelection = true
+                    machine.buyCoffee(CoffeeType.ESPRESSO)
+                }
+                "2" -> {
+                    rightSelection = true
+                    machine.buyCoffee(CoffeeType.LATTE)
+                }
+                "3" -> {
+                    rightSelection = true
+                    machine.buyCoffee(CoffeeType.CAPPUCCINO)
+                }
+                "back" -> {rightSelection = true
+                    -1
+                }
+                else -> {
+                    rightSelection = false
+                    println("Unknown selection. Please try again.")
+                    -1
+                }
+            }
+        }
+        return status
+
+    }
+
+    fun checkRemaining(){
         machine.giveStatusReport()
     }
 
-    fun take(){
+    fun takeEarnings(){
         println("I gave you ${machine.earnings}")
         machine.earnings = 0
-        machine.giveStatusReport()
     }
 
 }
