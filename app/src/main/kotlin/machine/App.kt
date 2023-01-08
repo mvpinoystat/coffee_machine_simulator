@@ -3,13 +3,28 @@
  */
 package machine
 
+import kotlin.system.exitProcess
+
 fun main() {
-    //Initialize the machine:
-    CustomerInterface().run{
-        //initialize the machine
-        initializeMachine()
-        //check the requirements
-        checkCupsRequirements()
+    //initial machine
+    val machine = Machine(Ingredients(water = 400, milk = 540, coffee_beans = 120),
+        earnings = 550, cups = 9)
+    val services = Services(machine)
+    Menu(services).run{
+        execute()
     }
+}
+
+class Menu(val services: Services){
+    fun execute(){
+        println("\nWrite action (buy, fill, take):")
+        when(inputAction()){
+            ACTION.BUY -> services.buyCoffee()
+            ACTION.TAKE -> services.take()
+            ACTION.FILL -> services.fillIngredients()
+            ACTION.LOOP -> exitProcess(0)
+       }
+
+       }
 
 }
