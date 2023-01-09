@@ -3,8 +3,7 @@
  */
 package machine
 
-fun main() {
-    //initial machine
+fun main() { //initial machine
     val machine = Machine(Ingredients(water = 400, milk = 540, coffee_beans = 120),
         earnings = 550, cups = 9)
     val services = Services(machine)
